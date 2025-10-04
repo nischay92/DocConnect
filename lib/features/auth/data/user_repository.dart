@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/utils/firestore_paths.dart';
 import '../domain/docconnect_user.dart';
 
 class UserRepository {
@@ -8,10 +9,10 @@ class UserRepository {
   final FirebaseFirestore _firestore;
 
   CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection('users');
+      _firestore.collection(FirestorePaths.users);
 
   Future<void> createUser(DocConnectUser user) async {
-    await _collection.doc(user.uid).set(user.toJson());
+    await _collection.doc(user.uid).set(user.toJson(), SetOptions(merge: true));
   }
 
   Future<DocConnectUser?> fetchUser(String uid) async {
@@ -29,5 +30,15 @@ class UserRepository {
       }
       return DocConnectUser.fromJson(snapshot.data()!);
     });
+  }
+
+  Future<void> setProfileCompleted(String uid, {required bool value}) async {
+    await _collection.doc(uid).set(
+      {
+        'profileCompleted': value,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
   }
 }
