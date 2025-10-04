@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/ui/theme/app_icons.dart';
+import '../../../../core/ui/widgets/app_text_field.dart';
 import '../../domain/user_role.dart';
 
 class AuthForm extends StatefulWidget {
@@ -7,10 +9,12 @@ class AuthForm extends StatefulWidget {
     super.key,
     required this.isSignIn,
     required this.onSubmit,
+    this.onEmailChanged,
   });
 
   final bool isSignIn;
   final Future<void> Function(String email, String password, UserRole? role) onSubmit;
+  final ValueChanged<String>? onEmailChanged;
 
   @override
   State<AuthForm> createState() => _AuthFormState();
@@ -68,16 +72,21 @@ class _AuthFormState extends State<AuthForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
+          AppTextField(
             controller: _emailController,
-            decoration: const InputDecoration(labelText: 'Email'),
+            label: 'Email',
+            hint: 'you@example.com',
+            icon: AppIcons.email,
             keyboardType: TextInputType.emailAddress,
             validator: _validateEmail,
+            onChanged: widget.onEmailChanged,
           ),
           const SizedBox(height: 16),
-          TextFormField(
+          AppTextField(
             controller: _passwordController,
-            decoration: const InputDecoration(labelText: 'Password'),
+            label: 'Password',
+            hint: 'Enter your password',
+            icon: AppIcons.password,
             obscureText: true,
             validator: _validatePassword,
           ),
@@ -85,21 +94,24 @@ class _AuthFormState extends State<AuthForm> {
           if (!widget.isSignIn) ...[
             const Text('Select your role'),
             const SizedBox(height: 8),
-            DropdownButtonFormField<UserRole>(
-              initialValue: _selectedRole,
-              items: UserRole.values
+            DropdownMenu<UserRole>(
+              initialSelection: _selectedRole,
+              dropdownMenuEntries: UserRole.values
                   .map(
-                    (role) => DropdownMenuItem(
+                    (role) => DropdownMenuEntry(
                       value: role,
-                      child: Text(role.label),
+                      label: role.label,
+                      leadingIcon: Icon(
+                        role == UserRole.patient
+                            ? AppIcons.profile
+                            : AppIcons.specialty,
+                      ),
                     ),
                   )
                   .toList(),
-              onChanged: (role) {
+              onSelected: (role) {
                 if (role != null) {
-                  setState(() {
-                    _selectedRole = role;
-                  });
+                  setState(() => _selectedRole = role);
                 }
               },
             ),

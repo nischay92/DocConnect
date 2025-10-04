@@ -50,6 +50,7 @@ dependencies:
 
   # Platform Integrations
   google_maps_flutter: ^2.7.1
+  google_fonts: ^6.3.2
 
 dev_dependencies:
   flutter_test:

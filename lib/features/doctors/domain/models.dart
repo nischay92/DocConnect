@@ -8,6 +8,7 @@ part 'models.g.dart';
 
 @freezed
 class DoctorProfile with _$DoctorProfile {
+  // ignore: invalid_annotation_target
   const factory DoctorProfile({
     required String uid,
     required String fullName,
@@ -24,6 +25,10 @@ class DoctorProfile with _$DoctorProfile {
 
   factory DoctorProfile.fromJson(Map<String, dynamic> json) =>
       _$DoctorProfileFromJson(json);
+}
+
+extension DoctorProfileX on DoctorProfile {
+  String get displayName => fullName.startsWith('Dr.') ? fullName : 'Dr. $fullName';
 }
 
 @freezed

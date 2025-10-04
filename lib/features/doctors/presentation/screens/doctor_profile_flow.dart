@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../auth/presentation/screens/auth_gate.dart';
 import '../../data/doctor_repository.dart';
 import '../../domain/models.dart';
 
@@ -51,6 +53,7 @@ class _DoctorProfileFlowState extends ConsumerState<DoctorProfileFlow> {
     if (user == null) return;
 
     final repository = ref.read(doctorRepositoryProvider);
+    final userRepository = ref.read(userRepositoryProvider);
     final acceptedInsurance = _insuranceController.text
         .split(',')
         .map((e) => e.trim())
@@ -80,6 +83,7 @@ class _DoctorProfileFlowState extends ConsumerState<DoctorProfileFlow> {
     setState(() => _isSaving = true);
     try {
       await repository.upsert(profile);
+      await userRepository.setProfileCompleted(user.uid, value: true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -90,11 +94,11 @@ class _DoctorProfileFlowState extends ConsumerState<DoctorProfileFlow> {
     }
 
     if (!mounted) return;
+    setState(() => _isSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile saved')),
     );
-    setState(() => _isSaving = false);
-    Navigator.of(context).pop(true);
+    context.go(AuthGate.routePath);
   }
 
   @override
@@ -102,101 +106,109 @@ class _DoctorProfileFlowState extends ConsumerState<DoctorProfileFlow> {
     return Scaffold(
       appBar: AppBar(title: const Text('Doctor Profile')),
       body: SafeArea(
-        child: AbsorbPointer(
-          absorbing: _isSaving,
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                TextFormField(
-                  controller: _fullNameController,
-                  decoration: const InputDecoration(labelText: 'Full Name'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _specialtyController,
-                  decoration: const InputDecoration(labelText: 'Specialty'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _experienceController,
-                  decoration: const InputDecoration(labelText: 'Years of Experience'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Required';
-                    final years = int.tryParse(value);
-                    if (years == null || years < 0) {
-                      return 'Enter a valid number';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Clinic Information',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _clinicNameController,
-                  decoration: const InputDecoration(labelText: 'Clinic/Practice Name'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _clinicAddressController,
-                  decoration: const InputDecoration(labelText: 'Clinic Address'),
-                  maxLines: 2,
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _clinicPhoneController,
-                  decoration: const InputDecoration(labelText: 'Clinic Phone (optional)'),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _clinicWebsiteController,
-                  decoration: const InputDecoration(labelText: 'Website (optional)'),
-                  keyboardType: TextInputType.url,
-                ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _insuranceController,
-                  decoration: const InputDecoration(
-                    labelText: 'Accepted Insurance (comma-separated)',
+        child: Stack(
+          children: [
+            Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  TextFormField(
+                    controller: _fullNameController,
+                    decoration: const InputDecoration(labelText: 'Full Name'),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _bioController,
-                  decoration: const InputDecoration(
-                    labelText: 'Bio (optional)',
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _specialtyController,
+                    decoration: const InputDecoration(labelText: 'Specialty'),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
                   ),
-                  maxLines: 4,
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: _isSaving ? null : _submit,
-                  child: _isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save Profile'),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _experienceController,
+                    decoration: const InputDecoration(labelText: 'Years of Experience'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Required';
+                      final years = int.tryParse(value);
+                      if (years == null || years < 0) {
+                        return 'Enter a valid number';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Clinic Information',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _clinicNameController,
+                    decoration: const InputDecoration(labelText: 'Clinic/Practice Name'),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _clinicAddressController,
+                    decoration: const InputDecoration(labelText: 'Clinic Address'),
+                    maxLines: 2,
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _clinicPhoneController,
+                    decoration: const InputDecoration(labelText: 'Clinic Phone (optional)'),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _clinicWebsiteController,
+                    decoration: const InputDecoration(labelText: 'Website (optional)'),
+                    keyboardType: TextInputType.url,
+                  ),
+                  const SizedBox(height: 24),
+                  TextFormField(
+                    controller: _insuranceController,
+                    decoration: const InputDecoration(
+                      labelText: 'Accepted Insurance (comma-separated)',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _bioController,
+                    decoration: const InputDecoration(
+                      labelText: 'Bio (optional)',
+                    ),
+                    maxLines: 4,
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: _isSaving ? null : _submit,
+                    child: _isSaving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save Profile'),
+                  ),
+                ],
+              ),
             ),
-          ),
+            if (_isSaving)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: Colors.black38,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+          ],
         ),
       ),
     );

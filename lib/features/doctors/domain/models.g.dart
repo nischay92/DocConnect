@@ -30,7 +30,7 @@ Map<String, dynamic> _$$DoctorProfileImplToJson(
   'fullName': instance.fullName,
   'specialty': instance.specialty,
   'yearsOfExperience': instance.yearsOfExperience,
-  'clinic': instance.clinic,
+  'clinic': instance.clinic.toJson(),
   'acceptedInsurance': instance.acceptedInsurance,
   'bio': instance.bio,
   'profilePictureUrl': instance.profilePictureUrl,

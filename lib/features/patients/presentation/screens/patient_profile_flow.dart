@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../auth/presentation/screens/auth_gate.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../data/patient_repository.dart';
 import '../../domain/models.dart';
@@ -64,6 +66,7 @@ class _PatientProfileFlowState extends ConsumerState<PatientProfileFlow> {
 	if (user == null) return;
 
     final repository = ref.read(patientRepositoryProvider);
+    final userRepository = ref.read(userRepositoryProvider);
     final profile = PatientProfile(
       uid: user.uid,
       fullName: _fullNameController.text.trim(),
@@ -88,6 +91,7 @@ class _PatientProfileFlowState extends ConsumerState<PatientProfileFlow> {
     setState(() => _isSaving = true);
     try {
       await repository.upsert(profile);
+      await userRepository.setProfileCompleted(user.uid, value: true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,11 +102,11 @@ class _PatientProfileFlowState extends ConsumerState<PatientProfileFlow> {
     }
 
     if (!mounted) return;
+    setState(() => _isSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile saved')),
     );
-    setState(() => _isSaving = false);
-    Navigator.of(context).pop(true);
+    context.go(AuthGate.routePath);
   }
 
   @override
@@ -110,129 +114,137 @@ class _PatientProfileFlowState extends ConsumerState<PatientProfileFlow> {
     return Scaffold(
       appBar: AppBar(title: const Text('Patient Profile')),
       body: SafeArea(
-        child: AbsorbPointer(
-          absorbing: _isSaving,
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                TextFormField(
-                  controller: _fullNameController,
-                  decoration: const InputDecoration(labelText: 'Full Name'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Date of Birth'),
-                  subtitle: Text(
-                    _dateOfBirth == null
-                        ? 'Select date'
-                        : '${_dateOfBirth!.year}-${_dateOfBirth!.month.toString().padLeft(2, '0')}-${_dateOfBirth!.day.toString().padLeft(2, '0')}',
+        child: Stack(
+          children: [
+            Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  TextFormField(
+                    controller: _fullNameController,
+                    decoration: const InputDecoration(labelText: 'Full Name'),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: _selectDate,
-                  ),
-                ),
-                if (_dateOfBirth == null)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: Text(
-                      'Required',
-                      style: TextStyle(color: Colors.red),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Date of Birth'),
+                    subtitle: Text(
+                      _dateOfBirth == null
+                          ? 'Select date'
+                          : '${_dateOfBirth!.year}-${_dateOfBirth!.month.toString().padLeft(2, '0')}-${_dateOfBirth!.day.toString().padLeft(2, '0')}',
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.calendar_today),
+                      onPressed: _selectDate,
                     ),
                   ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _gender,
-                  decoration: const InputDecoration(labelText: 'Gender'),
-                  items: const [
-                    DropdownMenuItem(value: 'male', child: Text('Male')),
-                    DropdownMenuItem(value: 'female', child: Text('Female')),
-                    DropdownMenuItem(value: 'other', child: Text('Other')),
-                  ],
-                  onChanged: (value) => setState(() => _gender = value),
-                  validator: (value) => value == null ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(labelText: 'Address (optional)'),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Emergency Contact',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _emergencyNameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emergencyRelationshipController,
-                  decoration: const InputDecoration(labelText: 'Relationship'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emergencyPhoneController,
-                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Insurance Information',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _insuranceProviderController,
-                  decoration: const InputDecoration(labelText: 'Provider'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _insurancePolicyController,
-                  decoration: const InputDecoration(labelText: 'Policy Number'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: (_dateOfBirth == null || _gender == null || _isSaving)
-                      ? null
-                      : _submit,
-                  child: _isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save Profile'),
-                ),
-              ],
+                  if (_dateOfBirth == null)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Text(
+                        'Required',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _gender,
+                    decoration: const InputDecoration(labelText: 'Gender'),
+                    items: const [
+                      DropdownMenuItem(value: 'male', child: Text('Male')),
+                      DropdownMenuItem(value: 'female', child: Text('Female')),
+                      DropdownMenuItem(value: 'other', child: Text('Other')),
+                    ],
+                    onChanged: (value) => setState(() => _gender = value),
+                    validator: (value) => value == null ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(labelText: 'Phone Number'),
+                    keyboardType: TextInputType.phone,
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _addressController,
+                    decoration: const InputDecoration(labelText: 'Address (optional)'),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Emergency Contact',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _emergencyNameController,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _emergencyRelationshipController,
+                    decoration: const InputDecoration(labelText: 'Relationship'),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _emergencyPhoneController,
+                    decoration: const InputDecoration(labelText: 'Phone Number'),
+                    keyboardType: TextInputType.phone,
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Insurance Information',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _insuranceProviderController,
+                    decoration: const InputDecoration(labelText: 'Provider'),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _insurancePolicyController,
+                    decoration: const InputDecoration(labelText: 'Policy Number'),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: (_dateOfBirth == null || _gender == null || _isSaving)
+                        ? null
+                        : _submit,
+                    child: _isSaving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save Profile'),
+                  ),
+                ],
+              ),
             ),
-          ),
+            if (_isSaving)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: Colors.black38,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+          ],
         ),
       ),
     );
