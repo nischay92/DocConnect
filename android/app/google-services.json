@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "59665215731",
+    "project_id": "docconnect-mvp",
+    "storage_bucket": "docconnect-mvp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:59665215731:android:3ae0ef20b5e4a8c4e54786",
+        "android_client_info": {
+          "package_name": "com.docconnect.app.docconnect_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPIjl1gLJWGXbJK47dFW-tR97POEg1q-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

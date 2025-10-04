@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -26,7 +27,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
 class GoRouterRefreshNotifier extends ChangeNotifier {
   GoRouterRefreshNotifier(this.ref) {
-    // TODO: listen to auth state changes to trigger router refresh
+    ref.listen(authUserProvider, (_, __) => notifyListeners());
   }
 
   final Ref ref;
