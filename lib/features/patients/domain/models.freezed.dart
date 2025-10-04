@@ -249,7 +249,8 @@ class __$$PatientProfileImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
+@JsonSerializable(explicitToJson: true)
 class _$PatientProfileImpl implements _PatientProfile {
   const _$PatientProfileImpl({
     required this.uid,

@@ -7,6 +7,8 @@ part 'models.g.dart';
 
 @freezed
 class PatientProfile with _$PatientProfile {
+  // ignore: invalid_annotation_target
+  @JsonSerializable(explicitToJson: true)
   const factory PatientProfile({
     required String uid,
     required String fullName,

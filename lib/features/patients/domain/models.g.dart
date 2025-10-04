@@ -31,8 +31,8 @@ Map<String, dynamic> _$$PatientProfileImplToJson(
   'dateOfBirth': instance.dateOfBirth.toIso8601String(),
   'gender': instance.gender,
   'phone': instance.phone,
-  'emergencyContact': instance.emergencyContact,
-  'insuranceInfo': instance.insuranceInfo,
+  'emergencyContact': instance.emergencyContact.toJson(),
+  'insuranceInfo': instance.insuranceInfo.toJson(),
   'address': instance.address,
   'updatedAt': const TimestampDateTimeConverter().toJson(instance.updatedAt),
 };
