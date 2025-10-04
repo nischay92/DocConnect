@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../controllers/auth_controller.dart';
 import 'auth_landing_screen.dart';
 import 'home_placeholder_screen.dart';
-import 'profile_setup_placeholder_screen.dart';
+import '../../../patients/presentation/screens/patient_profile_flow.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -35,7 +35,7 @@ class AuthGate extends ConsumerWidget {
 
             final docUser = snapshot.data;
             if (docUser == null || !docUser.profileCompleted) {
-              return const ProfileSetupPlaceholderScreen();
+              return const PatientProfileFlow();
             }
 
             return HomePlaceholderScreen(role: docUser.role);
